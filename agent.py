@@ -34,7 +34,7 @@ class DeepSeekAgent:
         response = self.client.chat.completions.create(
             model=self.model,
             messages=[
-                {"role": "system", "content": "You are a friendly AI assistant."},
+                {"role": "system", "content": "You are a friendly AI assistant. Reply casually, use short natural sentences, emojis if needed, and avoid formal mission reports."},
                 {"role": "user", "content": message}
             ]
         )
@@ -128,7 +128,8 @@ Return ONLY a valid JSON object with a single key 'plan' containing an array of 
             })
 
         state.status = "COMPLETED"
-        return self.synthesize_final_result(state)
+        return final = self.synthesize_final_result(state)
+return f"Got it ✅ — here’s the result:\n{final}"
 
     def synthesize_final_result(self, state: AgentState) -> str:
         if not self.client:
@@ -145,7 +146,7 @@ Provide a comprehensive, professional, well-formatted Markdown response.
             response = self.client.chat.completions.create(
                 model=self.model,
                 messages=[
-                    {"role": "system", "content": "You are an expert autonomous AI agent delivering the final report."},
+                    {"role": "system", "content": "You are a helpful AI assistant. Summarize results in a friendly, clear way — avoid sounding like a commander or mission report."},
                     {"role": "user", "content": prompt}
                 ]
             )
