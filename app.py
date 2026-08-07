@@ -41,27 +41,24 @@ async def chat_endpoint(req: ChatRequest):
         if not user_msg:
             raise HTTPException(status_code=400, detail="Message cannot be empty.")
 
-        # Dual mode + shortcuts
-        if user_msg.lower().startswith("chat:"):
-            result = agent.simple_chat(user_msg[5:].strip())
-
-        elif user_msg.lower().startswith("n8n:"):
-            use_case = user_msg[4:].strip()
-            if not use_case:
-                return ChatResponse(response="Theek hai 👍 — kis use‑case ke liye workflow chahiye? (e.g. Google Sheets → Slack)")
-            result = capabilities.generate_n8n_workflow(use_case)
+        # Intent detection without prefixes
+        if any(word in user_msg.lower() for word in ["workflow", "n8n", "automation"]):
+            result = capabilities.generate_n8n_workflow(user_msg)
             result = f"Got it ✅ — workflow ready:\n{result}"
 
-        elif user_msg.lower().startswith("analysis:"):
-            topic = user_msg[9:].strip()
-            if not topic:
-                return ChatResponse(response="Analysis kis topic par chahiye?")
-            result = capabilities.perform_business_analysis(topic)
+        elif any(word in user_msg.lower() for word in ["analysis", "report", "market"]):
+            result = capabilities.perform_business_analysis(user_msg)
             result = f"Here’s your friendly analysis report 📊:\n{result}"
 
+        elif any(word in user_msg.lower() for word in ["github", "repo", "file"]):
+            result = agent.tools.github_read_file("owner", "repo", "README.md")
+
+        elif any(word in user_msg.lower() for word in ["image", "logo", "picture"]):
+            result = agent.tools.generate_media(user_msg, "image")
+
         else:
-            result = agent.run(user_msg)
-            result = f"Done ✅ — here’s what I found:\n{result}"
+            # Default friendly chat
+            result = agent.simple_chat(user_msg)
 
         return ChatResponse(response=result)
 
