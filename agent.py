@@ -26,6 +26,21 @@ class DeepSeekAgent:
         self.tools = ToolRegistry()
         self.capabilities = BusinessAndAutomationEngine()
 
+
+    # Normal conversation mode
+    def simple_chat(self, message: str) -> str:
+        if not self.client:
+            return f"You said: {message}"
+        response = self.client.chat.completions.create(
+            model=self.model,
+            messages=[
+                {"role": "system", "content": "You are a friendly AI assistant."},
+                {"role": "user", "content": message}
+            ]
+        )
+        return response.choices[0].message.content
+        
+
     def generate_plan(self, task: str) -> List[str]:
         logger.info(f"Generating execution plan for task: {task}")
         if not self.client:
