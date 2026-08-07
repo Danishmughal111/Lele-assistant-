@@ -1,7 +1,7 @@
 import os
 import argparse
-from dotenv import load
-load()
+from dotenv import load_dotenv
+load_dotenv()
 
 from agent import DeepSeekAgent
 from tools import ToolRegistry
