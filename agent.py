@@ -27,6 +27,36 @@ class DeepSeekAgent:
         self.capabilities = BusinessAndAutomationEngine()
 
 
+    # ✅ Memory file path
+        self.memory_file = "agent_memory.json"
+
+
+    def remember_fact(self, fact: str):
+        """Save a fact into memory file"""
+        try:
+            with open(self.memory_file, "a") as f:
+                f.write(fact + "\n")
+        except Exception as e:
+            logger.error(f"Error saving memory: {e}")
+
+    def recall_memory(self) -> List[str]:
+        """Recall all saved facts"""
+        if not os.path.exists(self.memory_file):
+            return []
+        with open(self.memory_file, "r") as f:
+            return [line.strip() for line in f.readlines()]
+
+    def forget_fact(self, fact: str):
+        """Forget a specific fact"""
+        if not os.path.exists(self.memory_file):
+            return
+        with open(self.memory_file, "r") as f:
+            lines = f.readlines()
+        with open(self.memory_file, "w") as f:
+            for line in lines:
+                if line.strip() != fact:
+                    f.write(line)
+
     # Normal conversation mode
     def simple_chat(self, message: str) -> str:
         if not self.client:
@@ -113,23 +143,28 @@ Return ONLY a valid JSON object with a single key 'plan' containing an array of 
             return f"Executed step with error: {e}"
 
     def run(self, task: str) -> str:
-        state = AgentState(task=task)
-        state.status = "PLANNING"
-        state.plan = self.generate_plan(task)
-        state.status = "RUNNING"
+    state = AgentState(task=task)
+    state.status = "PLANNING"
+    state.plan = self.generate_plan(task)
+    state.status = "RUNNING"
 
-        for idx, step in enumerate(state.plan):
-            state.current_step = idx
-            result = self.execute_step(step, state.memory)
-            state.memory.append({
-                "step_index": idx,
-                "step": step,
-                "result": result
-            })
+    for idx, step in enumerate(state.plan):
+        state.current_step = idx
+        result = self.execute_step(step, state.memory)
+        state.memory.append({
+            "step_index": idx,
+            "step": step,
+            "result": result
+        })
 
-        state.status = "COMPLETED"
-        return final = self.synthesize_final_result(state)
-return f"Got it ✅ — here’s the result:\n{final}"
+    state.status = "COMPLETED"
+    final = self.synthesize_final_result(state)
+
+    # ✅ Save summary into memory
+    self.remember_fact(f"Task: {task} | Result: {state.memory[-1]['result']}")
+
+    # ✅ Friendly return
+    return f"Got it ✅ — here’s the result:\n{final}"
 
     def synthesize_final_result(self, state: AgentState) -> str:
         if not self.client:
