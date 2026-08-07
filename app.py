@@ -3,9 +3,8 @@ from fastapi import FastAPI, HTTPException
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
-from dotenv import load
-
-load()
+from dotenv import load_dotenv
+load_dotenv()
 
 from agent import DeepSeekAgent
 from capabilities import BusinessAndAutomationEngine
