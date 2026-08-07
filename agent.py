@@ -143,29 +143,28 @@ Return ONLY a valid JSON object with a single key 'plan' containing an array of 
             return f"Executed step with error: {e}"
 
     def run(self, task: str) -> str:
-    state = AgentState(task=task)
-    state.status = "PLANNING"
-    state.plan = self.generate_plan(task)
-    state.status = "RUNNING"
+        state = AgentState(task=task)
+        state.status = "PLANNING"
+        state.plan = self.generate_plan(task)
+        state.status = "RUNNING"
 
-    for idx, step in enumerate(state.plan):
-        state.current_step = idx
-        result = self.execute_step(step, state.memory)
-        state.memory.append({
-            "step_index": idx,
-            "step": step,
-            "result": result
+        for idx, step in enumerate(state.plan):
+            state.current_step = idx
+            result = self.execute_step(step, state.memory)
+            state.memory.append({
+               "step_index": idx,
+               "step": step,
+               "result": result
         })
 
-    state.status = "COMPLETED"
-    final = self.synthesize_final_result(state)
+        state.status = "COMPLETED"
+        final = self.synthesize_final_result(state)
 
     # ✅ Save summary into memory
-    self.remember_fact(f"Task: {task} | Result: {state.memory[-1]['result']}")
+        self.remember_fact(f"Task: {task} | Result: {state.memory[-1]['result']}")
 
     # ✅ Friendly return
-    return f"Got it ✅ — here’s the result:\n{final}"
-
+        return f"Got it ✅ — here’s the result:\n{final}"
     def synthesize_final_result(self, state: AgentState) -> str:
         if not self.client:
             return f"Task completed successfully.\n\nExecution Summary:\n{json.dumps(state.memory, indent=2)}"
