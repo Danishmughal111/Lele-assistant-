@@ -32,8 +32,6 @@ class ChatRequest(BaseModel):
 
 class ChatResponse(BaseModel):
     response: str
-
-# Chat endpoint with dual-mode logic
 @app.post("/api/chat", response_model=ChatResponse)
 async def chat_endpoint(req: ChatRequest):
     try:
@@ -41,26 +39,21 @@ async def chat_endpoint(req: ChatRequest):
         if not user_msg:
             raise HTTPException(status_code=400, detail="Message cannot be empty.")
 
-        # Intent detection without prefixes
-        if any(word in user_msg.lower() for word in ["workflow", "n8n", "automation"]):
-            result = capabilities.generate_n8n_workflow(user_msg)
-            result = f"Got it ✅ — workflow ready:\n{result}"
-
-        elif any(word in user_msg.lower() for word in ["analysis", "report", "market"]):
-            result = capabilities.perform_business_analysis(user_msg)
-            result = f"Here’s your friendly analysis report 📊:\n{result}"
-
-        elif any(word in user_msg.lower() for word in ["github", "repo", "file"]):
-            result = agent.tools.github_read_file("owner", "repo", "README.md")
-
-        elif any(word in user_msg.lower() for word in ["image", "logo", "picture"]):
-            result = agent.tools.generate_media(user_msg, "image")
+        # Agar user "task:" likhe to agent run kare
+        if user_msg.lower().startswith("task:"):
+            task_text = user_msg[5:].strip()
+            result = agent.run(task_text)
+            response_text = f"Done ✅ — here’s what I found:\n{result}"
 
         else:
-            # Default friendly chat
+            # Normal baat cheet friendly chat mode me
             result = agent.simple_chat(user_msg)
+            response_text = result
 
-        return ChatResponse(response=result)
+        # ✅ Add copy & regenerate options in response
+        return ChatResponse(
+            response=response_text + "\n\nOptions: [Copy] [Regenerate]"
+        )
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
